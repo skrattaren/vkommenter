@@ -1,3 +1,2 @@
 keyring
-pygments
 requests

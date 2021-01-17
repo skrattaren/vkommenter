@@ -5,17 +5,22 @@ import datetime
 import pprint
 import time
 
-from pygments import highlight
-from pygments.lexers.python import PythonLexer
-from pygments.formatters.terminal256 import Terminal256Formatter
+try:
+    from pygments import highlight
+    from pygments.lexers.python import PythonLexer
+    from pygments.formatters.terminal256 import Terminal256Formatter
+    PYGMENTS_INSTALLED = True
+except ImportError:
+    PYGMENTS_INSTALLED = False
 
 from vkomment_utils import (VkWrapper, get_target_time, get_token_from_keyring,
                             UTC, STAW_CLUB_GROUP_ID, DEFAULT_TIME, GOLD_MEDAL_STR)
 
 def pp(obj):
-    print(highlight(pprint.pformat(obj),
-                    PythonLexer(),
-                    Terminal256Formatter()))
+    obj_str = pprint.pformat(obj)
+    if PYGMENTS_INSTALLED:
+        obj_str = highlight(obj_str, PythonLexer(), Terminal256Formatter())
+    print(obj_str)
 
 def wait_until_posted(post_at):
     delay = (post_at - datetime.datetime.now(tz=UTC)).total_seconds()

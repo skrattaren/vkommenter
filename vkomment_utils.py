@@ -1,11 +1,14 @@
 import datetime
 import json
+import logging
 import sys
 import time
 
 import keyring
 import requests
 
+
+LOGGER = logging.getLogger('vkomment')
 
 UTC = datetime.timezone.utc
 
@@ -37,43 +40,42 @@ class VkWrapper():
         payload.update(params)
         response = requests.get(self.API_URL_STUB.format(method=method),
                                 params=payload)
-        # print(response.url)
         return json.loads(response.text)
 
     def get_group_id(self, name_or_id):
         response = self.send_api_request('groups.getById',
                                          {'group_id': name_or_id})
         if response.get('error') is not None:
-            print(f"Couldn't find a group with name or id {name_or_id}",
-                  file=sys.stderr)
+            LOGGER.error("Couldn't find a group with name or id %s",
+                         name_or_id)
             sys.exit(1)
         return "-{}".format(response['response'][0]['id'])
 
-    def get_latest_post(self, group_id, attempt=60):
-        if attempt < 0:
-            print("Didn't find any suitable post!", file=sys.stderr)
+    def get_latest_post_and_time(self, group_id, attempts=None):
+        if attempts is not None and attempts < 0:
+            LOGGER.error("Didn't find any suitable post!")
             sys.exit(1)
         data = self.send_api_request('wall.get',
                                      {'owner_id': group_id,
                                       'offset': 0,
-                                      'count': 1,
+                                      'count': 13,
                                       'filter': 'owner'})
-        latest = data['response']['items'][0]
+        latest = next(iter(i for i in data['response']['items']
+                           if i.get('is_pinned') != 1))
         now = time.time()
-        # print("Found post from {} (now is {})"
-        #       "".format(datetime.datetime.fromtimestamp(latest['date']),
-        #                 datetime.datetime.fromtimestamp(now)))
+        if attempts is None:
+            return latest['id'], datetime.datetime.fromtimestamp(latest['date'])
         if now - latest['date'] > 666:
             time.sleep(1)
-            return self.get_latest_post(group_id, attempt - 1)
-        return latest['id']
+            return self.get_latest_post_and_time(group_id, attempts - 1)
+        return latest['id'], datetime.datetime.fromtimestamp(latest['date'])
 
     def add_comment(self, group_id, post_id, comment_text):
         data = self.send_api_request('wall.createComment',
                                      {'post_id': post_id,
                                       'owner_id': group_id,
                                       'message': comment_text})
-        return data
+        return data['response']['comment_id']
 
 def get_target_time(post_incoming_at):
     post_incoming_at = [int(d) for d in post_incoming_at.split(':')]

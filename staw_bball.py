@@ -2,6 +2,7 @@
 
 import argparse
 import datetime
+import logging
 import pprint
 import time
 
@@ -14,7 +15,9 @@ except ImportError:
     PYGMENTS_INSTALLED = False
 
 from vkomment_utils import (VkWrapper, get_target_time, get_token_from_keyring,
-                            UTC, STAW_CLUB_GROUP_ID, DEFAULT_TIME, GOLD_MEDAL_STR)
+                            UTC, STAW_CLUB_GROUP_ID, DEFAULT_TIME, GOLD_MEDAL_STR,
+                            LOGGER)
+
 
 def pp(obj):
     obj_str = pprint.pformat(obj)
@@ -25,7 +28,7 @@ def pp(obj):
 def wait_until_posted(post_at):
     delay = (post_at - datetime.datetime.now(tz=UTC)).total_seconds()
     h, m = divmod(delay // 60, 60)
-    print(f"Waiting for {h:.0f}:{m:0>2.0f}")
+    LOGGER.info("Waiting for %s", f'{h:.0f}:{m:0>2.0f}')
     time.sleep(delay)
 
 def parse_args():
@@ -42,6 +45,8 @@ def parse_args():
     parser.add_argument('-T', '--posted-at', metavar='TIME', default=DEFAULT_TIME,
                         help=f"Expected time when the post appears (HH:MM in UTC, "
                              f"default is '{DEFAULT_TIME}')")
+    parser.add_argument('--verbose', '-v', dest='verbosity', action='count',
+                        default=0, help="Debug message verbosity")
     comment_group = parser.add_mutually_exclusive_group()
     comment_group.add_argument('-p', '--plus', dest='comment_text',
                                action='store_const', const='+', default='+',
@@ -58,15 +63,32 @@ def parse_args():
 def get_token(args_):
     return args_.token or get_token_from_keyring()
 
+def setup_logger(verb_arg=0):
+    stderr_handler = logging.StreamHandler()
+    formatter = logging.Formatter('[%(asctime)s]: %(message)s')
+    stderr_handler.setFormatter(formatter)
+    LOGGER.addHandler(stderr_handler)
+    LOG_LEVELS = {0: logging.ERROR,
+                  1: logging.INFO}
+    log_level = LOG_LEVELS.get(verb_arg, logging.DEBUG)
+    LOGGER.setLevel(log_level)
+
 def main(token, group_id, comment_text, post_at):
     vk = VkWrapper(token)
     group_id = vk.get_group_id(group_id)
+    latest_id, post_time = vk.get_latest_post_and_time(group_id)
+    LOGGER.info("Current latest post: %s from %s",
+                f'https://vk.com/wall{group_id}_{latest_id}', post_time)
     wait_until_posted(post_at)
-    latest_id = vk.get_latest_post(group_id)
-    pp(vk.add_comment(group_id, latest_id, comment_text))
+    LOGGER.info("The time has come, starting to wait for new post...")
+    latest_id, _ = vk.get_latest_post_and_time(group_id, attempts=60)
+    comment_id = vk.add_comment(group_id, latest_id, comment_text)
+    LOGGER.info("Comment added: %s",
+                f'https://vk.com/wall{group_id}_{latest_id}?reply={comment_id}')
 
 
 if __name__ == '__main__':
     args = parse_args()
+    setup_logger(args.verbosity)
     post_incoming_at = get_target_time(args.posted_at)
     main(get_token(args), args.group_id, args.comment_text, post_incoming_at)

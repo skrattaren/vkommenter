@@ -58,6 +58,8 @@ def parse_args():
                                action='store_const', const=GOLD_MEDAL_STR,
                                help="Comment with a :1st_place_medal: emoji "
                                     "(for the cocky ones)")
+    comment_group.add_argument('-c', '--comment-text', dest='comment_text',
+                               help="Your own text to post as a comment")
     return parser.parse_args()
 
 def get_token(args_):

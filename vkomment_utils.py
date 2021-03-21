@@ -4,7 +4,10 @@ import logging
 import sys
 import time
 
-import keyring
+try:
+    import keyring
+except ImportError:
+    keyring = None
 import requests
 
 
@@ -21,6 +24,9 @@ _KEYRING_TOKEN_NAME = 'vkomment_token'
 
 
 def get_token_from_keyring():
+    if keyring is None:
+        LOGGER.error("Cannot find `keyring` module")
+        sys.exit(1)
     return keyring.get_password(_KEYRING_SERVICE, _KEYRING_TOKEN_NAME)
 
 

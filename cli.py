@@ -14,7 +14,8 @@ try:
 except ImportError:
     PYGMENTS_INSTALLED = False
 
-from vkomment_utils import (VkWrapper, get_target_time, get_token_from_keyring,
+from vkomment_utils import (VkWrapper, get_target_time,
+                            get_token_from_keyring, save_token_to_keyring,
                             UTC, STAW_CLUB_GROUP_ID, DEFAULT_TIME, GOLD_MEDAL_STR,
                             LOGGER)
 
@@ -38,7 +39,7 @@ def parse_args():
                         help="VK token (see https://devman.org/qna/63"
                              "/kak-poluchit-token-polzovatelja-dlja-vkontakte/ "
                              "for details)")
-    parser.add_argument('-K', '--no-keyring', action='store_true',
+    parser.add_argument('-K', '--no-keyring', action='store_false', dest='use_keyring',
                         help="Do not use keyring for token management")
     parser.add_argument('-g', '--group-id', default=STAW_CLUB_GROUP_ID,
                         help=f"Group ID or alias (default is '{STAW_CLUB_GROUP_ID}')")
@@ -92,5 +93,7 @@ def main(token, group_id, comment_text, post_at):
 if __name__ == '__main__':
     args = parse_args()
     setup_logger(args.verbosity)
+    if args.token and args.use_keyring:
+        save_token_to_keyring(args.token)
     post_incoming_at = get_target_time(args.posted_at)
     main(get_token(args), args.group_id, args.comment_text, post_incoming_at)

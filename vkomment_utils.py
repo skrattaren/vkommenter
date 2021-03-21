@@ -30,6 +30,13 @@ def get_token_from_keyring():
     return keyring.get_password(_KEYRING_SERVICE, _KEYRING_TOKEN_NAME)
 
 
+def save_token_to_keyring(token):
+    if keyring is None:
+        LOGGER.warning("Cannot find `keyring` module, token won't be saved")
+        return
+    keyring.set_password(_KEYRING_SERVICE, _KEYRING_TOKEN_NAME, token)
+
+
 class VkWrapper():
     API_VERSION = '5.125'
     API_URL_STUB = 'https://api.vk.com/method/{method}'

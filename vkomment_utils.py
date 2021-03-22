@@ -41,7 +41,6 @@ class VkWrapper():
     API_VERSION = '5.125'
     API_URL_STUB = 'https://api.vk.com/method/{method}'
 
-    token = None
     basic_params = {'v': API_VERSION}
 
     def __init__(self, token):

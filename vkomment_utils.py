@@ -90,7 +90,11 @@ class VkWrapper():
         return data['response']['comment_id']
 
 def get_target_time(post_incoming_at):
-    post_incoming_at = [int(d) for d in post_incoming_at.split(':')]
+    try:
+        post_incoming_at = [int(d) for d in post_incoming_at.split(':')]
+    except ValueError:
+        LOGGER.error("Invalid time provided: %s", post_incoming_at)
+        sys.exit(1)
     today = datetime.datetime.now(tz=UTC).date()
     post_at = datetime.datetime(today.year, today.month, today.day,
                                 post_incoming_at[0], post_incoming_at[1], 0,

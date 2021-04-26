@@ -1,7 +1,7 @@
 name: comment-regularly
 on:
   schedule:
-    - cron: '55 05 * * 1,5'
+    - cron: '45 05 * * 1,5'
   workflow_dispatch:
     inputs:
       group_id:

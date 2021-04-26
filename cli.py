@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('-T', '--posted-at', metavar='TIME', default=DEFAULT_TIME,
                         help=f"Expected time when the post appears (HH:MM in UTC, "
                              f"default is '{DEFAULT_TIME}')")
-    parser.add_argument('--verbose', '-v', dest='verbosity', action='count',
+    parser.add_argument('-v', '--verbose', dest='verbosity', action='count',
                         default=0, help="Debug message verbosity")
     parser.add_argument('-G', '--github-workaround', dest='github_workaround',
                         action='store_true', default=False,

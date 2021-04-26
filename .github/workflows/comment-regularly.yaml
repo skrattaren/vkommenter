@@ -2,6 +2,16 @@ name: comment-regularly
 on:
   schedule:
     - cron: '55 05 * * 1,5'
+  workflow_dispatch:
+    inputs:
+      group_id:
+        description: 'VK group id'
+        required: false
+        default: 'stawclub'
+      time:
+        description: 'Expect new post at'
+        required: false
+        default: '06:00'
 jobs:
   comment:
     runs-on: ubuntu-latest
@@ -21,4 +31,6 @@ jobs:
           VK_TOKEN: ${{ secrets.VK_TOKEN }}
         run: |
           python3 cli.py -vvv --no-keyring --double-plus \
-                         --token "$VK_TOKEN"
+                         --token "$VK_TOKEN" \
+                         --group-id "${{ github.event.inputs.group_id }}" \
+                         --posted-at "${{ github.event.inputs.time }}"

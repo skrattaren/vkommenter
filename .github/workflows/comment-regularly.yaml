@@ -30,7 +30,7 @@ jobs:
         env:
           VK_TOKEN: ${{ secrets.VK_TOKEN }}
         run: |
-          python3 cli.py -vvv --no-keyring --double-plus \
+          python3 cli.py -vvv --no-keyring --double-plus --github-workaround \
                          --token "$VK_TOKEN" \
                          --group-id "${{ github.event.inputs.group_id }}" \
                          --posted-at "${{ github.event.inputs.time }}"

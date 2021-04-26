@@ -48,6 +48,10 @@ def parse_args():
                              f"default is '{DEFAULT_TIME}')")
     parser.add_argument('--verbose', '-v', dest='verbosity', action='count',
                         default=0, help="Debug message verbosity")
+    parser.add_argument('-G', '--github-workaround', dest='github_workaround',
+                        action='store_true', default=False,
+                        help="Replace empty strings with default values "
+                             "(a workaround for GutHub Actions limitation)")
     comment_group = parser.add_mutually_exclusive_group()
     comment_group.add_argument('-p', '--plus', dest='comment_text',
                                action='store_const', const='+', default='+',
@@ -76,6 +80,18 @@ def setup_logger(verb_arg=0):
     log_level = LOG_LEVELS.get(verb_arg, logging.DEBUG)
     LOGGER.setLevel(log_level)
 
+def fix_github_args(arg_namespace):
+    """
+    Replace empty strings with default values
+
+    This is a workaround for GitHub action issue when specifying both manual
+    and scheduled triggers (`on: [workflow_dispatch, schedule]`).
+    # pylint: disable=line-too-long
+    See https://github.community/t/how-can-you-use-expressions-as-the-workflow-dispatch-input-default/141454
+    """
+    arg_namespace.group_id = arg_namespace.group_id or STAW_CLUB_GROUP_ID
+    arg_namespace.posted_at = arg_namespace.posted_at or DEFAULT_TIME
+
 def main(token, group_id, comment_text, post_at):
     vk = VkWrapper(token)
     group_id = vk.get_group_id(group_id)
@@ -92,6 +108,8 @@ def main(token, group_id, comment_text, post_at):
 
 if __name__ == '__main__':
     args = parse_args()
+    if args.github_workaround:
+        fix_github_args(args)
     setup_logger(args.verbosity)
     if args.token and args.use_keyring:
         save_token_to_keyring(args.token)

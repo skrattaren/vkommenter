@@ -89,7 +89,11 @@ class VkWrapper():
                                       'message': comment_text})
         return data['response']['comment_id']
 
-def get_target_time(post_incoming_at):
+def get_target_time(post_incoming_at, soon_and_sharp=False):
+    if soon_and_sharp:
+        post_at = datetime.datetime.now(tz=UTC) + datetime.timedelta(hours=1)
+        post_at = post_at.replace(minute=0, second=0, microsecond=0)
+        return post_at
     try:
         post_incoming_at = [int(d) for d in post_incoming_at.split(':')]
     except ValueError:

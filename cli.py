@@ -43,15 +43,19 @@ def parse_args():
                         help="Do not use keyring for token management")
     parser.add_argument('-g', '--group-id', default=STAW_CLUB_GROUP_ID,
                         help=f"Group ID or alias (default is '{STAW_CLUB_GROUP_ID}')")
-    parser.add_argument('-T', '--posted-at', metavar='TIME', default=DEFAULT_TIME,
-                        help=f"Expected time when the post appears (HH:MM in UTC, "
-                             f"default is '{DEFAULT_TIME}')")
     parser.add_argument('-v', '--verbose', dest='verbosity', action='count',
                         default=0, help="Debug message verbosity")
     parser.add_argument('-G', '--github-workaround', dest='github_workaround',
                         action='store_true', default=False,
                         help="Replace empty strings with default values "
                              "(a workaround for GutHub Actions limitation)")
+    time_group = parser.add_mutually_exclusive_group()
+    time_group.add_argument('-T', '--posted-at', metavar='TIME', default=DEFAULT_TIME,
+                            help=f"Expected time when the post appears (HH:MM in UTC, "
+                                 f"default is '{DEFAULT_TIME}')")
+    time_group.add_argument('-s', '--soon-and-sharp', action='store_true',
+                            help="Wait for post at the closest 'HH:00' time "
+                            "(e.g., expect post at 11:00 if script is run at 10:20")
     comment_group = parser.add_mutually_exclusive_group()
     comment_group.add_argument('-p', '--plus', dest='comment_text',
                                action='store_const', const='+', default='+',
@@ -113,5 +117,5 @@ if __name__ == '__main__':
     setup_logger(args.verbosity)
     if args.token and args.use_keyring:
         save_token_to_keyring(args.token)
-    post_incoming_at = get_target_time(args.posted_at)
+    post_incoming_at = get_target_time(args.posted_at, args.soon_and_sharp)
     main(get_token(args), args.group_id, args.comment_text, post_incoming_at)

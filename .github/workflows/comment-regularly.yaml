@@ -14,6 +14,8 @@ on:
         default: '06:00'
 jobs:
   comment:
+    env:
+      VK_TOKEN: ${{ secrets.VK_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -27,9 +29,6 @@ jobs:
           pip install requests pygments
       - name: Run the script with arguments provided via GUI
         if: ${{ github.event.inputs.group_id != '' }}
-        shell: bash
-        env:
-          VK_TOKEN: ${{ secrets.VK_TOKEN }}
         run: |
           python3 cli.py -vvv --no-keyring --double-plus --github-workaround \
                          --token "$VK_TOKEN" \
@@ -37,9 +36,6 @@ jobs:
                          --posted-at "${{ github.event.inputs.time }}"
       - name: Run the script on schedule for the closest 'HH:00' time
         if: ${{ github.event.inputs.group_id == '' }}
-        shell: bash
-        env:
-          VK_TOKEN: ${{ secrets.VK_TOKEN }}
         run: |
           python3 cli.py -vvv --no-keyring --token "$VK_TOKEN" \
                               --double-plus --soon-and-sharp

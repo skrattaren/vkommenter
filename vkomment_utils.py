@@ -36,6 +36,37 @@ def save_token_to_keyring(token):
         return
     keyring.set_password(_KEYRING_SERVICE, _KEYRING_TOKEN_NAME, token)
 
+def get_local_tz():
+    return datetime.datetime.now(tz=UTC).astimezone().tzinfo
+
+
+def get_timezone(is_time_local):
+    return get_local_tz() if is_time_local else UTC
+
+
+def get_post_delay(post_at):
+    return (post_at - datetime.datetime.now(tz=UTC)).total_seconds()
+
+
+def get_target_time(post_incoming_at, is_time_local=False, soon_and_sharp=False):
+    tz = get_timezone(is_time_local)
+    if soon_and_sharp:
+        post_at = datetime.datetime.now(tz=UTC) + datetime.timedelta(hours=1)
+        post_at = post_at.replace(minute=0, second=0, microsecond=0)
+        return post_at
+    try:
+        post_incoming_at = [int(d) for d in post_incoming_at.split(':')]
+    except ValueError:
+        LOGGER.error("Invalid time provided: %s", post_incoming_at)
+        sys.exit(1)
+    today = datetime.datetime.now(tz=tz).date()
+    post_at = datetime.datetime(today.year, today.month, today.day,
+                                post_incoming_at[0], post_incoming_at[1], 0,
+                                tzinfo=tz)
+    if post_at < datetime.datetime.now(tz=tz):
+        post_at += datetime.timedelta(days=1)
+    return post_at
+
 
 class VkWrapper():
     API_VERSION = '5.125'
@@ -80,7 +111,8 @@ class VkWrapper():
         if now - latest['date'] > 666:
             time.sleep(1)
             return self.get_latest_post_and_time(group_id, attempts - 1)
-        return latest['id'], datetime.datetime.fromtimestamp(latest['date'])
+        return latest['id'], datetime.datetime.fromtimestamp(latest['date'],
+                                                             tz=get_local_tz())
 
     def add_comment(self, group_id, post_id, comment_text):
         data = self.send_api_request('wall.createComment',
@@ -88,21 +120,3 @@ class VkWrapper():
                                       'owner_id': group_id,
                                       'message': comment_text})
         return data['response']['comment_id']
-
-def get_target_time(post_incoming_at, soon_and_sharp=False):
-    if soon_and_sharp:
-        post_at = datetime.datetime.now(tz=UTC) + datetime.timedelta(hours=1)
-        post_at = post_at.replace(minute=0, second=0, microsecond=0)
-        return post_at
-    try:
-        post_incoming_at = [int(d) for d in post_incoming_at.split(':')]
-    except ValueError:
-        LOGGER.error("Invalid time provided: %s", post_incoming_at)
-        sys.exit(1)
-    today = datetime.datetime.now(tz=UTC).date()
-    post_at = datetime.datetime(today.year, today.month, today.day,
-                                post_incoming_at[0], post_incoming_at[1], 0,
-                                tzinfo=UTC)
-    if post_at < datetime.datetime.now(tz=UTC):
-        post_at += datetime.timedelta(days=1)
-    return post_at

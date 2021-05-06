@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import datetime
 import logging
 import pprint
 import time
@@ -14,9 +13,9 @@ try:
 except ImportError:
     PYGMENTS_INSTALLED = False
 
-from vkomment_utils import (VkWrapper, get_target_time,
+from vkomment_utils import (VkWrapper, get_post_delay, get_target_time,
                             get_token_from_keyring, save_token_to_keyring,
-                            UTC, STAW_CLUB_GROUP_ID, DEFAULT_TIME, GOLD_MEDAL_STR,
+                            STAW_CLUB_GROUP_ID, DEFAULT_TIME, GOLD_MEDAL_STR,
                             LOGGER)
 
 
@@ -27,7 +26,7 @@ def pp(obj):
     print(obj_str)
 
 def wait_until_posted(post_at):
-    delay = (post_at - datetime.datetime.now(tz=UTC)).total_seconds()
+    delay = get_post_delay(post_at)
     h, m = divmod(delay // 60, 60)
     LOGGER.info("Waiting for %s", f'{h:.0f}:{m:0>2.0f}')
     time.sleep(delay)
@@ -56,6 +55,9 @@ def parse_args():
     time_group.add_argument('-s', '--soon-and-sharp', action='store_true',
                             help="Wait for post at the closest 'HH:00' time "
                             "(e.g., expect post at 11:00 if script is run at 10:20")
+    parser.add_argument('-l', '--local-time', action='store_true',
+                        dest='is_time_local',
+                        help="Interpret '--posted-at' as local time (not UTC)")
     comment_group = parser.add_mutually_exclusive_group()
     comment_group.add_argument('-p', '--plus', dest='comment_text',
                                action='store_const', const='+', default='+',
@@ -117,5 +119,7 @@ if __name__ == '__main__':
     setup_logger(args.verbosity)
     if args.token and args.use_keyring:
         save_token_to_keyring(args.token)
-    post_incoming_at = get_target_time(args.posted_at, args.soon_and_sharp)
+    post_incoming_at = get_target_time(args.posted_at, args.is_time_local,
+                                       args.soon_and_sharp)
+    LOGGER.info("Expecting new post at %s", post_incoming_at)
     main(get_token(args), args.group_id, args.comment_text, post_incoming_at)

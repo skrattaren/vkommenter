@@ -16,6 +16,8 @@ jobs:
   comment:
     env:
       VK_TOKEN: ${{ secrets.VK_TOKEN }}
+      VK_BOT_KEY: ${{ secrets.VK_BOT_KEY }}
+      NOTIFIEE_ID: ${{ secrets.NOTIFIEE_ID }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -34,6 +36,14 @@ jobs:
                          --token "$VK_TOKEN" \
                          --group-id "${{ github.event.inputs.group_id }}" \
                          --posted-at "${{ github.event.inputs.time }}"
+
+      - name: Notify about workflow being triggered
+        if: ${{ github.event.inputs.group_id == '' }}
+        run: |
+          python3 notify.py --bot-key "$VK_BOT_KEY" --no-keyring \
+                            --include-time --user-id "$NOTIFIEE_ID" \
+                            "Workflow has started, waiting for new post"
+
       - name: Run the script on schedule for the closest 'HH:00' time
         if: ${{ github.event.inputs.group_id == '' }}
         run: |

@@ -48,4 +48,4 @@ jobs:
         if: ${{ github.event.inputs.group_id == '' }}
         run: |
           python3 cli.py -vvv --no-keyring --token "$VK_TOKEN" \
-                              --plus --soon-and-sharp
+                              --double-plus --soon-and-sharp

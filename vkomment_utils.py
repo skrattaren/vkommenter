@@ -36,6 +36,7 @@ def save_token_to_keyring(token):
         return
     keyring.set_password(_KEYRING_SERVICE, _KEYRING_TOKEN_NAME, token)
 
+
 def get_local_tz():
     return datetime.datetime.now(tz=UTC).astimezone().tzinfo
 

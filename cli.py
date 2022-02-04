@@ -25,11 +25,13 @@ def pp(obj):
         obj_str = highlight(obj_str, PythonLexer(), Terminal256Formatter())
     print(obj_str)
 
+
 def wait_until_posted(post_at):
     delay = get_post_delay(post_at)
     h, m = divmod(delay // 60, 60)
     LOGGER.info("Waiting for %s", f'{h:.0f}:{m:0>2.0f}')
     time.sleep(delay)
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -73,8 +75,10 @@ def parse_args():
                                help="Your own text to post as a comment")
     return parser.parse_args()
 
+
 def get_token(args_):
     return args_.token or get_token_from_keyring()
+
 
 def setup_logger(verb_arg=0):
     stderr_handler = logging.StreamHandler()
@@ -86,17 +90,18 @@ def setup_logger(verb_arg=0):
     log_level = LOG_LEVELS.get(verb_arg, logging.DEBUG)
     LOGGER.setLevel(log_level)
 
+
 def fix_github_args(arg_namespace):
     """
     Replace empty strings with default values
 
     This is a workaround for GitHub action issue when specifying both manual
     and scheduled triggers (`on: [workflow_dispatch, schedule]`).
-    # pylint: disable=line-too-long
-    See https://github.community/t/how-can-you-use-expressions-as-the-workflow-dispatch-input-default/141454
+    See https://github.community/t/expressions-as-the-workflow-dispatch-input/141454
     """
     arg_namespace.group_id = arg_namespace.group_id or STAW_CLUB_GROUP_ID
     arg_namespace.posted_at = arg_namespace.posted_at or DEFAULT_TIME
+
 
 def main(token, group_id, comment_text, post_at):
     vk = VkWrapper(token)

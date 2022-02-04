@@ -111,7 +111,7 @@ def main(token, group_id, comment_text, post_at):
                 f'https://vk.com/wall{group_id}_{latest_id}', post_time)
     wait_until_posted(post_at)
     LOGGER.info("The time has come, starting to wait for new post...")
-    latest_id, _ = vk.get_latest_post_and_time(group_id, attempts=60)
+    latest_id, _ = vk.get_latest_post_and_time(group_id, attempts=300)
     comment_id = vk.add_comment(group_id, latest_id, comment_text)
     LOGGER.info("Comment added: %s",
                 f'https://vk.com/wall{group_id}_{latest_id}?reply={comment_id}')

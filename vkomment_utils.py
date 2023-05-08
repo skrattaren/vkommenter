@@ -23,6 +23,12 @@ _KEYRING_SERVICE = 'VK'
 _KEYRING_TOKEN_NAME = 'vkomment_token'
 
 
+class VkError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self, message)
+
+
 def get_token_from_keyring():
     if keyring is None:
         LOGGER.error("Cannot find `keyring` module")
@@ -84,14 +90,19 @@ class VkWrapper():
         payload.update(params)
         response = requests.get(self.API_URL_STUB.format(method=method),
                                 params=payload, timeout=3)
-        return json.loads(response.text)
+        r_text = json.loads(response.text)
+        vk_error = r_text.get('error')
+        if vk_error is not None:
+            raise VkError(vk_error)
+        return r_text
 
     def get_group_id(self, name_or_id):
-        response = self.send_api_request('groups.getById',
-                                         {'group_id': name_or_id})
-        if response.get('error') is not None:
-            LOGGER.error("Couldn't find a group with name or id %s",
-                         name_or_id)
+        try:
+            response = self.send_api_request('groups.getById',
+                                             {'group_id': name_or_id})
+        except VkError as e:
+            LOGGER.error("Couldn't find a group with name or id %s, error:\n%s",
+                         name_or_id, e.message)
             sys.exit(1)
         return "-{}".format(response['response'][0]['id'])
 

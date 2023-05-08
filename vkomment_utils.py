@@ -70,7 +70,7 @@ def get_target_time(post_incoming_at, is_time_local=False, soon_and_sharp=False)
 
 
 class VkWrapper():
-    API_VERSION = '5.125'
+    API_VERSION = '5.131'
     API_URL_STUB = 'https://api.vk.com/method/{method}'
 
     basic_params = {'v': API_VERSION}

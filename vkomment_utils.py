@@ -83,7 +83,7 @@ class VkWrapper():
         payload.update(self.basic_params)
         payload.update(params)
         response = requests.get(self.API_URL_STUB.format(method=method),
-                                params=payload)
+                                params=payload, timeout=3)
         return json.loads(response.text)
 
     def get_group_id(self, name_or_id):

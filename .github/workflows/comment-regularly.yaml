@@ -1,7 +1,7 @@
 name: comment-regularly
 on:
   schedule:
-    - cron: '45 05 * * 1,5'
+    - cron: '45 05 * * 5'
   workflow_dispatch:
     inputs:
       group_id:
@@ -48,4 +48,4 @@ jobs:
         if: ${{ github.event.inputs.group_id == '' }}
         run: |
           python3 cli.py -vvv --no-keyring --token "$VK_TOKEN" \
-                              --double-plus --soon-and-sharp
+                              --medal --soon-and-sharp
